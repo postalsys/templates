@@ -1,0 +1,23 @@
+{
+    "name": "@postalsys/templates",
+    "version": "1.0.0",
+    "description": "Template language for EmailEngine",
+    "main": "lib/templates.js",
+    "scripts": {
+        "test": "nodeunit test/"
+    },
+    "keywords": [],
+    "author": "Postal Systems OÜ",
+    "license": "ISC",
+    "dependencies": {
+        "handlebars": "4.7.7",
+        "marked": "4.0.16",
+        "mjml": "4.12.0",
+        "moment": "2.29.3"
+    },
+    "devDependencies": {
+        "eslint-config-nodemailer": "1.2.0",
+        "eslint-config-prettier": "8.5.0",
+        "nodeunit": "0.11.3"
+    }
+}
