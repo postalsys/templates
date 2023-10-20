@@ -1,6 +1,6 @@
 {
     "name": "@postalsys/templates",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "description": "Template language for EmailEngine",
     "main": "lib/templates.js",
     "scripts": {
