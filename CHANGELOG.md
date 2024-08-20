@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/postalsys/templates/compare/v1.0.8...v2.0.0) (2024-08-20)
+
+
+### ⚠ BREAKING CHANGES
+
+* **mjml:** Removed MJML support
+
+### Bug Fixes
+
+* **mjml:** Removed MJML support ([1f105de](https://github.com/postalsys/templates/commit/1f105def319a37f0c78b88e32de7fb25ae0c200e))
+
 ## [1.0.8](https://github.com/postalsys/templates/compare/v1.0.7...v1.0.8) (2024-02-18)
 
 
