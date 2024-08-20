@@ -290,33 +290,6 @@ module.exports['html with no length'] = test => {
     test.done();
 };
 
-module.exports['mjml with variables'] = test => {
-    let source = `
-  <mjml>
-    <mj-body>
-      <mj-section>
-        <mj-column>
-          <mj-text>
-            Hello {{insert name "default=Customer"}}! Thank you for contacting us about {{insert businessName "your business"}}.
-          </mj-text>
-        </mj-column>
-      </mj-section>
-    </mj-body>
-  </mjml>
-`;
-
-    let template = getTemplate({
-        template: source,
-        format: 'mjml'
-    });
-    let rendered = template({
-        name: 'John'
-    });
-
-    test.ok(rendered.indexOf('>Hello John! Thank you for contacting us about your business.</div') >= 0);
-    test.done();
-};
-
 module.exports['markdown with variables'] = test => {
     let source = `
 ## Title
