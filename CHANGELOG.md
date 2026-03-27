@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/postalsys/templates/compare/v2.0.0...v2.0.1) (2026-03-27)
+
+
+### Bug Fixes
+
+* bumped deps ([8b1422b](https://github.com/postalsys/templates/commit/8b1422b9759afd7296ca4cce10c86f581a5be821))
+
 ## [2.0.0](https://github.com/postalsys/templates/compare/v1.0.8...v2.0.0) (2024-08-20)
 
 
