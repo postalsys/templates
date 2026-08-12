@@ -309,3 +309,63 @@ module.exports['markdown with variables'] = test => {
     test.ok(rendered.indexOf('<li>Hello John! Thank you for contacting us about your business.</li>') >= 0);
     test.done();
 };
+
+module.exports['markdown block elements'] = test => {
+    let template = getTemplate({
+        template: `## Title
+
+Some **bold** text and a [link](https://example.com).
+
+> quoted
+
+| a | b |
+|---|---|
+| 1 | 2 |
+`,
+        format: 'markdown'
+    });
+
+    test.equal(
+        template({}),
+        `<h2>Title</h2>
+<p>Some <strong>bold</strong> text and a <a href="https://example.com">link</a>.</p>
+<blockquote>
+<p>quoted</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>a</th>
+<th>b</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>2</td>
+</tr>
+</tbody></table>
+`
+    );
+    test.done();
+};
+
+module.exports['markdown escapes interpolated values'] = test => {
+    let template = getTemplate({
+        template: `# {{title}}
+
+Hello {{body}}
+`,
+        format: 'markdown'
+    });
+
+    test.equal(
+        template({
+            title: 'Title',
+            body: '<b>x</b>'
+        }),
+        `<h1>Title</h1>
+<p>Hello &lt;b&gt;x&lt;/b&gt;</p>
+`
+    );
+    test.done();
+};
