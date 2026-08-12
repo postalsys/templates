@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.2](https://github.com/postalsys/templates/compare/v2.0.1...v2.0.2) (2026-08-12)
+
+
+### Bug Fixes
+
+* **deps:** update marked from 9.1.6 to 15.0.12 ([2c5a4ce](https://github.com/postalsys/templates/commit/2c5a4ce1316f609180eff251a3f02ec889b44857))
+
 ## [2.0.1](https://github.com/postalsys/templates/compare/v2.0.0...v2.0.1) (2026-03-27)
 
 
