@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.3](https://github.com/postalsys/templates/compare/v2.0.2...v2.0.3) (2026-09-28)
+
+
+### Bug Fixes
+
+* escape markdown syntax in merge data and stop formatDate misreading the options object ([ac0bde2](https://github.com/postalsys/templates/commit/ac0bde2d55039badb96c604c990543ab6dd568e8))
+
 ## [2.0.2](https://github.com/postalsys/templates/compare/v2.0.1...v2.0.2) (2026-08-12)
 
 
