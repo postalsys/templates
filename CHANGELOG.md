@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.4](https://github.com/postalsys/templates/compare/v2.0.3...v2.0.4) (2026-10-08)
+
+
+### Bug Fixes
+
+* **deps:** update handlebars to 4.7.10 ([10abd02](https://github.com/postalsys/templates/commit/10abd02a838c60fcfbce4ff9ea2b23a9d90bc7da))
+
 ## [2.0.3](https://github.com/postalsys/templates/compare/v2.0.2...v2.0.3) (2026-09-28)
 
 
