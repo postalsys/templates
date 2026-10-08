@@ -15,7 +15,7 @@
         "url": "git+https://github.com/postalsys/templates.git"
     },
     "dependencies": {
-        "handlebars": "4.7.9",
+        "handlebars": "4.7.10",
         "marked": "15.0.12",
         "moment": "2.31.0"
     },
