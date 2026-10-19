@@ -1,0 +1,10 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Generated output
+coverage/
+dist/
+
+# Owned by release-please
+CHANGELOG.md
