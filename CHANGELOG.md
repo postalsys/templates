@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/postalsys/templates/compare/v2.0.4...v2.1.0) (2026-10-19)
+
+
+### Features
+
+* migrate to TypeScript with ES module and CommonJS builds ([cbb8000](https://github.com/postalsys/templates/commit/cbb8000488afcc18763b382a01a194d21976c38d))
+
 ## [2.0.4](https://github.com/postalsys/templates/compare/v2.0.3...v2.0.4) (2026-10-08)
 
 
