@@ -2,18 +2,50 @@
     "name": "@postalsys/templates",
     "version": "2.0.4",
     "description": "Template language for EmailEngine",
-    "main": "lib/templates.js",
+    "type": "module",
+    "main": "./dist/cjs/templates.js",
+    "types": "./dist/cjs/templates.d.ts",
+    "typesVersions": {
+        "*": {
+            "lib/*": [
+                "dist/cjs/*.d.ts"
+            ]
+        }
+    },
+    "exports": {
+        ".": {
+            "import": "./dist/esm/templates.js",
+            "require": "./dist/cjs/templates.js"
+        },
+        "./lib/templates": {
+            "import": "./dist/esm/templates.js",
+            "require": "./dist/cjs/templates.js"
+        },
+        "./lib/templates.js": {
+            "import": "./dist/esm/templates.js",
+            "require": "./dist/cjs/templates.js"
+        },
+        "./package.json": "./package.json"
+    },
     "files": [
-        "lib/"
+        "dist",
+        "CHANGELOG.md",
+        "SECURITY.md"
     ],
     "scripts": {
-        "test": "node --test test/*-test.js",
-        "test:coverage": "c8 npm test",
-        "test:cjs": "NODE_OPTIONS=--no-experimental-require-module npm test",
-        "lint": "eslint .",
+        "build": "node scripts/build.js",
+        "typecheck": "tsc -p tsconfig.json",
+        "pretest": "npm run build",
+        "test": "node --import tsx --test test/*-test.ts test/package/*-test.ts",
+        "pretest:coverage": "npm run build",
+        "test:coverage": "c8 node --import tsx --test test/*-test.ts test/package/*-test.ts",
+        "pretest:cjs": "npm run build",
+        "test:cjs": "NODE_OPTIONS=--no-experimental-require-module node test/package/cjs-smoke.cjs",
+        "lint": "npm run typecheck && eslint .",
         "lint:fix": "eslint . --fix",
-        "format": "prettier --write .",
-        "format:check": "prettier --check .",
+        "format": "prettier --write \"**/*.{js,cjs,ts,json,md,yml,yaml}\"",
+        "format:check": "prettier --check \"**/*.{js,cjs,ts,json,md,yml,yaml}\"",
+        "prepare": "npm run build",
         "update": "rm -rf node_modules package-lock.json && ncu -u && npm install"
     },
     "keywords": [],
@@ -29,12 +61,15 @@
         "moment": "2.31.0"
     },
     "devDependencies": {
-        "@eslint/js": "10.0.1",
+        "@types/node": "20.19.43",
         "c8": "12.0.0",
         "eslint": "10.13.0",
         "eslint-config-prettier": "10.1.8",
         "globals": "17.13.0",
-        "prettier": "3.9.10"
+        "prettier": "3.9.10",
+        "tsx": "4.23.15",
+        "typescript": "6.0.3",
+        "typescript-eslint": "8.71.2"
     },
     "engines": {
         "node": ">=20.0.0"

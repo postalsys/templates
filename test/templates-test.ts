@@ -1,9 +1,8 @@
-'use strict';
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import Handlebars from 'handlebars';
 
-const test = require('node:test');
-const assert = require('node:assert/strict');
-
-const { getTemplate } = require('..');
+import { getTemplate } from '../src/templates.js';
 
 test('html without variables', () => {
     let template = getTemplate(`<h1>Hello world</h1>`);
@@ -418,10 +417,11 @@ test('formatDate with invalid or missing date', () => {
 });
 
 test('templates are compiled once, not on every render', () => {
-    const Handlebars = require('handlebars');
+    // the type declarations make the module members read-only, the module object is not
+    const handlebars = Handlebars as { compile: typeof Handlebars.compile };
     let compile = Handlebars.compile;
     let calls = 0;
-    Handlebars.compile = (...args) => {
+    handlebars.compile = (...args) => {
         calls++;
         return compile.apply(Handlebars, args);
     };
@@ -433,7 +433,7 @@ test('templates are compiled once, not on every render', () => {
             assert.equal(plain({ a: '<x>' }), '<x>');
         }
     } finally {
-        Handlebars.compile = compile;
+        handlebars.compile = compile;
     }
     assert.equal(calls, 2);
 });
