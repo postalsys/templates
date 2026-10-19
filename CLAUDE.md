@@ -7,6 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 npm test                  # run the full suite (node --test test/*-test.js)
 npm run test:coverage     # the suite under c8
+npm run test:cjs          # the suite with require(esm) disabled (CommonJS guard)
 npm run lint              # eslint .
 npm run lint:fix          # eslint . --fix
 npm run format            # prettier --write .
@@ -41,9 +42,17 @@ Everything lives in `lib/templates.js`, which exports one function, `getTemplate
 
 Merge data must not be able to inject markdown syntax (links, images, emphasis) into a markdown template. A separate Handlebars environment (`markdownHandlebars`, sharing the global helpers and partials) uses a custom `JavaScriptCompiler` whose `appendEscaped` routes every `{{value}}` through `escapeMarkdown()`, which backslash-escapes markdown syntax and then HTML-escapes. `{{{value}}}` and `SafeString` values stay raw. The result is rendered by a `marked.Marked` instance whose `link` and `image` renderers drop URLs whose scheme (after decoding entities and stripping whitespace and control characters, as a browser would) is not on the allowlist: `http`, `https`, `mailto` for links, plus `cid` and `data` for images. Changes here deserve `/security-review`.
 
+## Platform constraints
+
+EmailEngine ships as a single-file binary built with `@yao-pkg/pkg`. That binary snapshots a CommonJS module graph and cannot load ES modules, and EmailEngine supports Node 20 and later. Two rules follow:
+
+- **Node.js 20 is the minimum.** Runtime code, tests and tooling must work on Node 20, 22 and 24 (`engines.node` is `>=20.0.0`; CI runs all three).
+- **Everything that reaches runtime must be genuinely CommonJS.** `require()` of this package and of every dependency it pulls in must work with `--no-experimental-require-module`: Node 22+ (and 20.19) load ESM through `require()` by default, which would hide an ESM-only dependency until the pkg binary fails. A CJS wrapper around a dynamic `import()` does not count. Never add or upgrade to an ESM-only dependency; pin the last CommonJS major in `.ncurc.js` (`reject` or `target`) with a comment giving the reason. `.ncurc.js` holds `marked` to the 15.x line because 16.x is ESM-only; `npm run update` honors that.
+
+Check with `npm run test:cjs`, which runs the full suite under `NODE_OPTIONS=--no-experimental-require-module`. CI runs it on Node 22.x and 24.x, the versions where require(esm) is on by default.
+
 ## Critical constraints
 
-- **CommonJS only, never ESM.** EmailEngine is shipped as a single-file binary built with `@yao-pkg/pkg`, which cannot reliably load pure-ESM packages. This package and every dependency it pulls in must stay CommonJS-loadable. `.ncurc.js` holds `marked` to the 15.x line because 16.x is ESM-only; `npm run update` honors that. Do not add ESM-only dependencies.
 - **Global helper registration.** The helpers are registered on the shared `handlebars` module, so anything else in the consuming process that requires `handlebars` sees them too (and can override them). Keep helper names compatible with SendGrid's.
 - **Releases are automated via release-please.** The version in `package.json` and `CHANGELOG.md` are owned by the bot; do not bump them by hand. npm publication happens from `.github/workflows/release.yaml` when a release is created.
 
