@@ -3,6 +3,9 @@
     "version": "2.0.4",
     "description": "Template language for EmailEngine",
     "main": "lib/templates.js",
+    "files": [
+        "lib/"
+    ],
     "scripts": {
         "test": "node --test test/*-test.js",
         "test:coverage": "c8 npm test",
