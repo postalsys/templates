@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.1](https://github.com/postalsys/templates/compare/v2.1.0...v2.1.1) (2026-10-20)
+
+
+### Bug Fixes
+
+* format dates without moment ([20fd03e](https://github.com/postalsys/templates/commit/20fd03ed6ecf3f68a738287a7909f77cb3f45ad2))
+
 ## [2.1.0](https://github.com/postalsys/templates/compare/v2.0.4...v2.1.0) (2026-10-19)
 
 
