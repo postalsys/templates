@@ -1,9 +1,10 @@
 /* eslint eqeqeq:0 */
 
-import moment from 'moment';
 import { Marked } from 'marked';
 import type { MarkedOptions, Tokens } from 'marked';
 import Handlebars from 'handlebars';
+
+import { formatDate, parseDate, parseOffset } from './format-date.js';
 
 /** The renderer returned by getTemplate(), called with the merge data */
 export type TemplateRenderer = (data?: unknown) => string;
@@ -26,25 +27,6 @@ interface HandlebarsEnvironment {
     JavaScriptCompiler: new () => any;
 }
 
-function parseDate(value: unknown): moment.Moment {
-    if (value instanceof Date || typeof value === 'number') {
-        return moment.utc(value);
-    }
-    if (moment.isMoment(value)) {
-        return value.clone().utc();
-    }
-    if (typeof value !== 'string' || !value.trim()) {
-        return moment.invalid();
-    }
-    // Explicit formats keep moment from falling back to Date parsing, which logs a deprecation warning
-    let date = moment.utc(value.trim(), [moment.ISO_8601, moment.RFC_2822], true);
-    if (!date.isValid()) {
-        let parsed = new Date(value);
-        date = isNaN(parsed.getTime()) ? moment.invalid() : moment.utc(parsed);
-    }
-    return date;
-}
-
 // https://docs.sendgrid.com/for-developers/sending-email/using-handlebars#formatdate
 Handlebars.registerHelper('formatDate', (...args: unknown[]) => {
     // Handlebars always appends its options object, it is not one of the helper arguments
@@ -52,17 +34,13 @@ Handlebars.registerHelper('formatDate', (...args: unknown[]) => {
     const [timeStamp, dateFormat, timezoneOffset] = args;
 
     // Parsed and rendered in UTC so the output does not depend on the timezone of the process
-    let date = parseDate(timeStamp);
-    if (!date.isValid()) {
+    let time = parseDate(timeStamp);
+    if (isNaN(time)) {
         return '';
     }
 
-    if (typeof timezoneOffset === 'string' || typeof timezoneOffset === 'number') {
-        date = date.utcOffset(timezoneOffset);
-    }
-
-    // moment's default format is ISO 8601
-    return date.format(typeof dateFormat === 'string' && dateFormat ? dateFormat : undefined);
+    // without a format the output is ISO 8601
+    return formatDate(time, dateFormat, parseOffset(timezoneOffset));
 });
 
 // https://docs.sendgrid.com/for-developers/sending-email/using-handlebars#insert

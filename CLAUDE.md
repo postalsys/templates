@@ -34,11 +34,12 @@ The scripts in `examples/` are not tests; run them directly (`node examples/hbs.
 
 The package is written in TypeScript and published as a dual package: ES modules in `dist/esm/` and CommonJS in `dist/cjs/`, each with type declarations. The layout follows `../pubface` (and, before it, `../nodemailer` and `../imapflow`).
 
-- `src/templates.ts` - all of the code. Exports `getTemplate`, the `TemplateOptions` and `TemplateRenderer` types, and a default export object `{ getTemplate }`.
+- `src/templates.ts` - the public module. Exports `getTemplate`, the `TemplateOptions` and `TemplateRenderer` types, and a default export object `{ getTemplate }`.
+- `src/format-date.ts` - date parsing and formatting behind the `formatDate` helper (internal, not exported from the package).
 - `scripts/build.js` - runs `tsc` with `tsconfig.esm.json` (type-checks) and `tsconfig.cjs.json` (`--noCheck`), writes a `package.json` pinning the module format into each output directory, and rewrites the CommonJS `exports.default` assignment into a non-enumerable property. That keeps `require('@postalsys/templates')` returning an object whose only key is `getTemplate`, as `module.exports = { getTemplate }` did, while transpiled `import templates from '@postalsys/templates'` code can still read `.default`.
 - `package.json` `exports` keeps every path the JavaScript package could be required by: `.`, `./lib/templates`, `./lib/templates.js` (all pointing at `dist/`) and `./package.json`. `typesVersions` maps `lib/*` to the declarations for older TypeScript resolution.
 - `dist/` is build output, gitignored, and is what gets published (`files`).
-- `test/templates-test.ts` tests the source; `test/package/package-test.ts` checks the built `dist/` through the exports map (shape of both builds, deep imports, the packed file list, both builds loaded into one process, consumer type-checks); `test/package/cjs-smoke.cjs` is the `test:cjs` script, plain JavaScript on purpose so tsx cannot mask an ES module dependency.
+- `test/templates-test.ts` tests the source, `test/format-date-test.ts` is the moment differential test; `test/package/package-test.ts` checks the built `dist/` through the exports map (shape of both builds, deep imports, the packed file list, both builds loaded into one process, consumer type-checks); `test/package/cjs-smoke.cjs` is the `test:cjs` script, plain JavaScript on purpose so tsx cannot mask an ES module dependency.
 
 `getTemplate(options)`:
 
@@ -46,7 +47,7 @@ The package is written in TypeScript and published as a dual package: ES modules
 - The template is compiled once when `getTemplate()` is called, and the returned function renders it. Handlebars compiles lazily, so a syntax error still surfaces on the first render. A test pins that compilation happens once.
 - `html` escapes merge values, `plain` does not (`noEscape`). `mjml` returns a renderer that throws `NotSupported`.
 - Helpers are registered on the global Handlebars instance at load time: `formatDate`, `insert`, `length`, `greaterThan`, `lessThan`, `equals`, `notEquals`, `and`, `or`, each following the SendGrid helper of the same name (links in the source). `equals`/`notEquals` compare loosely on purpose (`'100'` equals `100`), hence the file-level eslint override.
-- `formatDate` takes moment format strings, as SendGrid's does, so `moment` is part of the template language and stays a dependency. It parses ISO 8601 and RFC 2822 strictly, falls back to `Date` parsing for anything else, and renders in UTC (or the given offset) so the output never depends on the process timezone. An invalid or missing date renders as an empty string.
+- `formatDate` takes moment format strings, as SendGrid's does, so moment's token syntax is part of the template language. It used to be implemented with `moment`; `src/format-date.ts` now ports what moment 2.31 did for the English locale (tokens, strict ISO 8601 and RFC 2822 parsing, offset parsing and validation, padding) with no dependency. It falls back to `Date` parsing for anything else, and renders in UTC (or the given offset) so the output never depends on the process timezone. An invalid or missing date renders as an empty string. `test/format-date-test.ts` renders every token, the documented patterns, random dates, inputs and format strings through a copy of the old moment-based helper and through the new one and requires identical output; `moment` is a devDependency for that test only, never a runtime one. Known differences: a format of only line terminators renders `''` where moment threw, and the era tokens (`N`, `y`) put the 0001-01-01 boundary at midnight UTC where moment used the process timezone.
 
 ### Markdown format: the security-sensitive part
 
