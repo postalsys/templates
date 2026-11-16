@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.0.0](https://github.com/postalsys/templates/compare/v2.1.1...v3.0.0) (2026-11-16)
+
+
+### ⚠ BREAKING CHANGES
+
+* loading the package no longer registers its helpers on the `handlebars` module. Templates rendered through getTemplate() are unaffected; code that compiled its own templates with the default Handlebars instance and relied on these helpers must register them itself.
+
+### Bug Fixes
+
+* keep the template helpers off the shared Handlebars instance ([81249d3](https://github.com/postalsys/templates/commit/81249d34c4ea8e1af955838b0a5a4275660035c2))
+
 ## [2.1.1](https://github.com/postalsys/templates/compare/v2.1.0...v2.1.1) (2026-10-20)
 
 
