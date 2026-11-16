@@ -106,11 +106,11 @@ describe('Built package', { timeout: 120 * 1000, skip: hasDist ? false : 'dist/ 
             assert.equal(require(`${packageName}/package.json`).name, packageName);
         });
 
-        it('registers the helpers on the shared Handlebars instance', () => {
+        it('keeps its helpers off the shared Handlebars instance', () => {
             require(packageName);
             const Handlebars = require('handlebars');
             for (const helper of HELPERS) {
-                assert.equal(typeof Handlebars.helpers[helper], 'function', helper);
+                assert.equal(Handlebars.helpers[helper], undefined, helper);
             }
         });
     });
@@ -132,8 +132,8 @@ describe('Built package', { timeout: 120 * 1000, skip: hasDist ? false : 'dist/ 
     });
 
     it('renders identically from both builds loaded into one process', () => {
-        // Both builds register the helpers on the one shared handlebars module, the second load
-        // replaces the first one's helpers with identical ones
+        // Each build has its own private Handlebars environment, so loading the second one leaves the
+        // shared handlebars module untouched
         const script = `
             const Handlebars = require('handlebars');
             const cjs = require(${JSON.stringify(packageName)});
@@ -158,7 +158,7 @@ describe('Built package', { timeout: 120 * 1000, skip: hasDist ? false : 'dist/ 
             // the asterisks from the merge data stay literal
             '<h1>*&lt;x&gt;* x many</h1>\n'
         ]);
-        assert.deepEqual(replaced, HELPERS);
+        assert.deepEqual(replaced, []);
     });
 
     // each tsc run has its own temporary project, so they run side by side

@@ -417,13 +417,15 @@ test('formatDate with invalid or missing date', () => {
 });
 
 test('templates are compiled once, not on every render', () => {
-    // the type declarations make the module members read-only, the module object is not
-    const handlebars = Handlebars as { compile: typeof Handlebars.compile };
-    let compile = Handlebars.compile;
+    // Every Handlebars environment, including the private one templates.ts compiles with, shares
+    // the JavaScriptCompiler class of the default instance, so its prototype sees every compile
+    const compilerPrototype = (Handlebars as unknown as { JavaScriptCompiler: { prototype: { compile: (...args: unknown[]) => unknown } } }).JavaScriptCompiler
+        .prototype;
+    let compile = compilerPrototype.compile;
     let calls = 0;
-    handlebars.compile = (...args) => {
+    compilerPrototype.compile = function (this: unknown, ...args: unknown[]) {
         calls++;
-        return compile.apply(Handlebars, args);
+        return compile.apply(this, args);
     };
     try {
         let html = getTemplate({ template: '<b>{{a}}</b>', format: 'html' });
@@ -433,9 +435,41 @@ test('templates are compiled once, not on every render', () => {
             assert.equal(plain({ a: '<x>' }), '<x>');
         }
     } finally {
-        handlebars.compile = compile;
+        compilerPrototype.compile = compile;
     }
     assert.equal(calls, 2);
+});
+
+test('helpers stay off the default Handlebars instance', () => {
+    for (let name of ['formatDate', 'insert', 'length', 'greaterThan', 'lessThan', 'equals', 'notEquals', 'and', 'or']) {
+        assert.equal(Handlebars.helpers[name], undefined, name);
+    }
+});
+
+test('a helper the host registers on the default instance does not change templates', () => {
+    // a host application with its own strict equals, the way EmailEngine's admin UI has one
+    Handlebars.registerHelper('equals', function (this: unknown, a: unknown, b: unknown, options: Handlebars.HelperOptions) {
+        return a === b ? options.fn(this) : options.inverse(this);
+    });
+    try {
+        // the template helper compares loosely, 1 == "1"
+        for (let format of ['html', 'plain', 'markdown']) {
+            let template = getTemplate({ template: '{{#equals a "1"}}yes{{else}}no{{/equals}}', format });
+            assert.equal(template({ a: 1 }).trim(), format === 'markdown' ? '<p>yes</p>' : 'yes', format);
+        }
+        // and the host keeps its own
+        assert.equal(Handlebars.compile('{{#equals a "1"}}yes{{else}}no{{/equals}}')({ a: 1 }), 'no');
+    } finally {
+        Handlebars.unregisterHelper('equals');
+    }
+});
+
+test('prototype properties render empty', () => {
+    for (let format of ['html', 'plain', 'markdown']) {
+        let template = getTemplate({ template: '[{{__proto__}}][{{constructor}}][{{a.constructor.name}}][{{lookup a "__proto__"}}]', format });
+        let output = template({ a: {} });
+        assert.ok(!/Object|function|\[object/i.test(output), format + ': ' + output);
+    }
 });
 
 test('markdown filters entity-encoded schemes and ignores non-numeric references', () => {

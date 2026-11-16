@@ -27,8 +27,14 @@ interface HandlebarsEnvironment {
     JavaScriptCompiler: new () => any;
 }
 
+// A private Handlebars environment, so the helpers below are not registered on the shared default
+// instance that the rest of the host application may also render its own templates with. Loading
+// this module used to replace any helper of the same name there (an `equals` with strict
+// comparison, for example) and leak these helpers into the host's views.
+const templateHandlebars = Handlebars.create();
+
 // https://docs.sendgrid.com/for-developers/sending-email/using-handlebars#formatdate
-Handlebars.registerHelper('formatDate', (...args: unknown[]) => {
+templateHandlebars.registerHelper('formatDate', (...args: unknown[]) => {
     // Handlebars always appends its options object, it is not one of the helper arguments
     args.pop();
     const [timeStamp, dateFormat, timezoneOffset] = args;
@@ -44,7 +50,7 @@ Handlebars.registerHelper('formatDate', (...args: unknown[]) => {
 });
 
 // https://docs.sendgrid.com/for-developers/sending-email/using-handlebars#insert
-Handlebars.registerHelper('insert', (value: unknown, options: unknown) => {
+templateHandlebars.registerHelper('insert', (value: unknown, options: unknown) => {
     // used as a string, Handlebars passes its options object when the template gives no default
     let spec = (options || '') as string;
     let splitter = spec.indexOf('=');
@@ -71,10 +77,10 @@ Handlebars.registerHelper('insert', (value: unknown, options: unknown) => {
 });
 
 // `in` on a primitive throws, as it always has for a string argument
-Handlebars.registerHelper('length', (value: any) => (value && 'length' in value ? value.length : 0));
+templateHandlebars.registerHelper('length', (value: any) => (value && 'length' in value ? value.length : 0));
 
 // https://docs.sendgrid.com/for-developers/sending-email/using-handlebars#basic-greaterthan
-Handlebars.registerHelper('greaterThan', function (this: unknown, compareVal: any, baseVal: any, options: Handlebars.HelperOptions) {
+templateHandlebars.registerHelper('greaterThan', function (this: unknown, compareVal: any, baseVal: any, options: Handlebars.HelperOptions) {
     if (!isNaN(baseVal) && !isNaN(compareVal)) {
         if (Number(compareVal) > Number(baseVal)) {
             return options.fn(this);
@@ -84,7 +90,7 @@ Handlebars.registerHelper('greaterThan', function (this: unknown, compareVal: an
 });
 
 // https://docs.sendgrid.com/for-developers/sending-email/using-handlebars#lessthan
-Handlebars.registerHelper('lessThan', function (this: unknown, compareVal: any, baseVal: any, options: Handlebars.HelperOptions) {
+templateHandlebars.registerHelper('lessThan', function (this: unknown, compareVal: any, baseVal: any, options: Handlebars.HelperOptions) {
     if (!isNaN(baseVal) && !isNaN(compareVal)) {
         if (Number(compareVal) < Number(baseVal)) {
             return options.fn(this);
@@ -94,7 +100,7 @@ Handlebars.registerHelper('lessThan', function (this: unknown, compareVal: any, 
 });
 
 // https://docs.sendgrid.com/for-developers/sending-email/using-handlebars#equals
-Handlebars.registerHelper('equals', function (this: unknown, compareVal: unknown, baseVal: unknown, options: Handlebars.HelperOptions) {
+templateHandlebars.registerHelper('equals', function (this: unknown, compareVal: unknown, baseVal: unknown, options: Handlebars.HelperOptions) {
     if (baseVal == compareVal) {
         return options.fn(this);
     }
@@ -102,7 +108,7 @@ Handlebars.registerHelper('equals', function (this: unknown, compareVal: unknown
 });
 
 // https://docs.sendgrid.com/for-developers/sending-email/using-handlebars#notequals
-Handlebars.registerHelper('notEquals', function (this: unknown, compareVal: unknown, baseVal: unknown, options: Handlebars.HelperOptions) {
+templateHandlebars.registerHelper('notEquals', function (this: unknown, compareVal: unknown, baseVal: unknown, options: Handlebars.HelperOptions) {
     if (baseVal != compareVal) {
         return options.fn(this);
     }
@@ -110,7 +116,7 @@ Handlebars.registerHelper('notEquals', function (this: unknown, compareVal: unkn
 });
 
 // https://docs.sendgrid.com/for-developers/sending-email/using-handlebars#and
-Handlebars.registerHelper('and', function (this: unknown, ...args: unknown[]) {
+templateHandlebars.registerHelper('and', function (this: unknown, ...args: unknown[]) {
     let options = args.pop() as Handlebars.HelperOptions;
 
     if (!args.length) {
@@ -126,7 +132,7 @@ Handlebars.registerHelper('and', function (this: unknown, ...args: unknown[]) {
 });
 
 // https://docs.sendgrid.com/for-developers/sending-email/using-handlebars#or
-Handlebars.registerHelper('or', function (this: unknown, ...args: unknown[]) {
+templateHandlebars.registerHelper('or', function (this: unknown, ...args: unknown[]) {
     let options = args.pop() as Handlebars.HelperOptions;
 
     for (let arg of args) {
@@ -155,10 +161,11 @@ function escapeMarkdown(value: unknown): string {
 // syntax, so {{value}} in that format escapes markdown on top of HTML. {{{value}}} stays raw.
 const markdownHandlebars = Handlebars.create();
 const markdownEnvironment = markdownHandlebars as unknown as HandlebarsEnvironment;
-const baseEnvironment = Handlebars as unknown as HandlebarsEnvironment;
-markdownEnvironment.helpers = Handlebars.helpers;
-markdownEnvironment.partials = Handlebars.partials;
-markdownEnvironment.decorators = Handlebars.decorators;
+const baseEnvironment = templateHandlebars as unknown as HandlebarsEnvironment;
+// The markdown environment shares the registries of the private one, never the default instance's
+markdownEnvironment.helpers = baseEnvironment.helpers;
+markdownEnvironment.partials = baseEnvironment.partials;
+markdownEnvironment.decorators = baseEnvironment.decorators;
 
 // Handlebars instantiates compilers with `new`, also the child compilers it makes through
 // `this.compiler`, so a class works where the original constructor function did
@@ -210,7 +217,7 @@ const markdownRenderer = new Marked({
 const MARKDOWN_RUNTIME_OPTIONS: Handlebars.RuntimeOptions = { helpers: { [MARKDOWN_ESCAPE_HELPER]: escapeMarkdown } };
 
 function getCompiler(source: string, escaped: boolean): Handlebars.TemplateDelegate {
-    return Handlebars.compile(source, { noEscape: !escaped });
+    return templateHandlebars.compile(source, { noEscape: !escaped });
 }
 
 function getMarkdownCompiler(source: string): TemplateRenderer {
